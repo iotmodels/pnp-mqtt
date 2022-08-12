@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>MQTT UX</title>
+      <!-- /dist/vue.global.prod.js -->
+      <script src="https://unpkg.com/vue@latest"></script>
+      <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.3/moment.min.js"></script>
+      <link href="style.css" rel="stylesheet" />
+      <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div id="app">
+        <div v-if="connected">{{hostName}} <span class="link"  @click="disconnect">disconnect</span></div>
+        <connection v-if="!connected" @config-changed="onConfigChanged"></connection>
+        <table v-if="connected">
+            <thead>
+                <tr>
+                    <td>DeviceId</td>
+                    <td>Status</td>
+                    <td>Model</td>
+                    <td>Last Activity</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="d in devices">
+                    <td><a :href="'device.html?id=' + d.deviceId + '&model-id=' + d.modelId">{{d.deviceId}}</a></td>
+                    <td :style="{color: d.status === 'online' ? 'green' : 'red'}">{{d.status}}</td>
+                    <td>{{d.modelId}}</td>
+                    <td>{{formatDate(d.when)}}</td>
+                    <td><button @click="removeDevice(d.deviceId)">delete</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script type="module">
+        import index from './index.js'
+        import Connection from './Connection.js'
+        const { createApp } = Vue
+        const app = createApp(index)
+        app.component('Connection', Connection)
+        app.mount('#app')
+    </script>
+</body>
+</html>

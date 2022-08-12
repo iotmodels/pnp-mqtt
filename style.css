@@ -1,0 +1,71 @@
+body {
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+}
+thead>tr>td {
+    font-weight: bold ;
+}
+th, td {
+    text-align:left;
+    padding: 10px
+}
+
+li.raw {
+    list-style:none
+}
+
+span {
+    margin: 5px
+}
+
+label {
+    display: inline-block;
+    width: 140px;
+    text-align: right;
+    margin-right: 5px;
+}
+
+.right-button {
+    margin-left: 85%;
+}
+
+.creds {
+ width: 600px;
+ border: 1px solid grey
+}
+
+.link {
+    text-decoration: underline;
+    color: blue;
+    cursor: pointer;
+}​
+
+.prop {
+    border: 1px solid grey;
+    width: 600px;
+    padding: 0px;
+    margin: 5px
+}
+
+.prop-desc {
+    padding-top: 15px;
+}
+.prop-name, .prop-value {
+    font-size:larger
+}
+
+.prop-value {
+    font-weight:bold
+}
+
+.prop-md {
+    text-align:right;
+    font-size:smaller;
+    font-style:italic
+
+}
+
+.props-metadata {
+    background-color:#ecf6fc;
+    padding:3px;
+    margin:3px
+}
