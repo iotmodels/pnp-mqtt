@@ -4,7 +4,7 @@ export default {
         return {
             hostName :'',
             port: '',
-            useTls: '',
+            useTls: false,
             clientId: '',
             userName: '',
             password: '',
@@ -49,8 +49,8 @@ export default {
         </p>
         <p>
             <label>UseTls</label>
-            yes <input type="radio" value="true" v-model="useTls">
-            no <input type="radio" value="false" v-model="useTls">
+            yes <input type="radio" :value="true" v-model="useTls">
+            no <input type="radio" :value="false" v-model="useTls">
         </p>
         <p>
             <label for="clientId">ClientId</label>

@@ -1,7 +1,8 @@
 let mqttCreds
+const readSettings = () => mqttCreds = JSON.parse(window.localStorage.getItem('mqttCreds'))
 const settings = window.localStorage.getItem('mqttCreds')
 if (settings) {
-    mqttCreds = JSON.parse(window.localStorage.getItem('mqttCreds'))
+    readSettings()
 } else {
     mqttCreds = {
         hostName: 'test.mosquitto.org',
@@ -13,9 +14,14 @@ if (settings) {
     }
     window.localStorage.setItem('mqttCreds', JSON.stringify(mqttCreds))
 }
+
 const mqttClient = {
-    start: () => mqtt.connect(`${mqttCreds.useTls ? 'wss' : 'ws'}://${mqttCreds.hostName}:${mqttCreds.port}/mqtt`, {
-       clientId: mqttCreds.clientId, username: mqttCreds.userName, password: mqttCreds.password })
+    start: () => {
+        readSettings()
+        const client = mqtt.connect(`${mqttCreds.useTls ? 'wss' : 'ws'}://${mqttCreds.hostName}:${mqttCreds.port}/mqtt`, {
+            clientId: mqttCreds.clientId, username: mqttCreds.userName, password: mqttCreds.password })
+        return client
+    }
 }
 
 export default mqttClient
