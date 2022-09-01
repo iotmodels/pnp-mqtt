@@ -6,6 +6,11 @@ const dtmiToPath = function (dtmi) {
     return `/${dtmi.toLowerCase().replace(/:/g, '/').replace(';', '-')}.json`
 }
 
+const isBuffer = obj => {
+    return obj != null && obj.constructor != null &&
+        typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
+}
+
 const isObject = obj => Object.prototype.toString.call(obj) === '[object Object]'
 
 const resolveSchema = s => {
@@ -27,7 +32,7 @@ export default {
         commands: [],
         telemetries: [],
         modelpath: '',
-        telemetryValues: []
+        telemetryValues: {}
     }),
     created() {
         client = mqtt.start()
@@ -58,9 +63,19 @@ export default {
                 client.subscribe(`pnp/${this.device.deviceId}/#`)
                 })
             client.on('message', (topic, message) => {
-                const msg = JSON.parse(message)
-                const ts = topic.split('/')
+                let msg = {}
+                if (isBuffer(message)) {
+                    const s = message.toString()
+                    if (s[0] == '{') {
+                        msg = JSON.parse(message)
+                    } else {
+                        msg = s
+                    }
+
+                }
+                //const msg = JSON.parse(message)
                 // console.log(topic, msg)
+                const ts = topic.split('/')
                 if (topic === `pnp/${this.device.deviceId}/birth`) {
                     this.device.connectionState = msg.status === 'online' ? 'Connected' : 'Disconnected'
                     this.device.lastActivityTime = msg.when
@@ -77,12 +92,15 @@ export default {
                 if (topic.startsWith(`pnp/${this.device.deviceId}/commands`)) {
                     const cmdName = ts[3]
                     const cmd = this.commands.filter(c => c.name === cmdName)[0]
+                    // const cmdRespSchema = resolveSchema(cmd.response.schema)
                     cmd.responseMsg = msg
                 }
                 if (topic === `pnp/${this.device.deviceId}/telemetry`) {
                     const maxItems = 10
-                    if (this.telemetryValues.length > maxItems) this.telemetryValues.shift()
-                    this.telemetryValues.push(msg)
+                    const telName = Object.keys(msg)[0]
+                    this.telemetryValues[telName] = []
+                    if (this.telemetryValues[telName].length > maxItems) this.telemetryValues[telName].shift()
+                    this.telemetryValues[telName].push(msg[telName])
                 }
             })
 

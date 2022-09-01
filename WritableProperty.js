@@ -7,13 +7,10 @@
             return _.get(object, string, defaultValue)
         },
         getPropColorState(name) {
-            const desSet = this.gv(this.deviceProps, 'desired.' + name)
-            if (desSet === '') {
-                return 'silver'
-            } 
-            const desVal = this.gv(this.deviceProps, 'desired.' + name)
-            const repVal = this.gv(this.deviceProps, 'reported.' + name + '.value')
-            return repVal === desVal ? 'lightgreen' : 'lightpink'
+            const repAck = this.gv(this.deviceProps, 'reported.' + name)
+            if (repAck.ac === 200) return 'lightgreen'
+            if (repAck.ac === 203) return 'silver'
+            return 'lightpink'
         },
         updateProp() {
             const input = document.getElementById('in-' + this.property.name)
