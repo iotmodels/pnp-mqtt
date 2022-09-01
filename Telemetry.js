@@ -9,8 +9,8 @@
                 </td>
             </tr>
         </thead>
-        <tr v-for="v in telemetryValues">
-            <td>{{v[telemetry.name]}} {{telemetry.unit ? telemetry.unit + 's' : ''}}</td>
+        <tr v-for="v in telemetryValues[telemetry.name]">
+            <td>{{v}}  <small>{{telemetry.unit ? telemetry.unit : ''}}</small></td>
         </tr>
     </table>
     `
