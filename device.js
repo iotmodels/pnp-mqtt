@@ -92,6 +92,7 @@ export default {
                 if (topic.startsWith(`pnp/${this.device.deviceId}/commands`)) {
                     const cmdName = ts[3]
                     const cmd = this.commands.filter(c => c.name === cmdName)[0]
+                    // const cmdRespSchema = resolveSchema(cmd.response.schema)
                     cmd.responseMsg = msg
                 }
                 if (topic === `pnp/${this.device.deviceId}/telemetry`) {
