@@ -98,9 +98,10 @@ export default {
                 if (topic === `pnp/${this.device.deviceId}/telemetry`) {
                     const maxItems = 10
                     const telName = Object.keys(msg)[0]
-                    this.telemetryValues[telName] = []
-                    if (this.telemetryValues[telName].length > maxItems) this.telemetryValues[telName].shift()
-                    this.telemetryValues[telName].push(msg[telName])
+                    Object.keys(msg).forEach(k => {
+                        this.telemetryValues[k] = []
+                        this.telemetryValues[k].push(msg[k])
+                    })
                 }
             })
 
