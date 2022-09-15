@@ -1,7 +1,7 @@
 import mqtt from './mqttClient.js'
 let client
 
-const repoBaseUrl = 'https://raw.githubusercontent.com/iotmodels/iot-plugandplay-models/rido/pnp' // 'https://devicemodels.azure.com'
+const repoBaseUrl = 'https://iotmodels.github.io/dmr/' // 'https://devicemodels.azure.com'
 const dtmiToPath = function (dtmi) {
     return `/${dtmi.toLowerCase().replace(/:/g, '/').replace(';', '-')}.json`
 }

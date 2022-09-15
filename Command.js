@@ -1,17 +1,4 @@
 ﻿
-// dupe
-const isObject = obj => Object.prototype.toString.call(obj) === '[object Object]'
-const resolveSchema = s => {
-    if (!isObject(s) && s.startsWith('dtmi:')) {
-        console.log('not supported schema', s)
-        return null
-    } else if (isObject(s) && s['@type'] === 'Enum') {
-        return s.valueSchema
-    } else {
-        return s
-    }
-}
-
 export default {
     data() {
         return {
@@ -21,8 +8,19 @@ export default {
     props: ['command', 'deviceId', 'responseMsg'],
     emits: ['commandInvoked'],
     methods: {
+        resolveSchema(s) {
+            const isObject = obj => Object.prototype.toString.call(obj) === '[object Object]'
+            if (!isObject(s) && s.startsWith('dtmi:')) {
+                console.log('not supported schema', s)
+                return null
+            } else if (isObject(s) && s['@type'] === 'Enum') {
+                return s.valueSchema
+            } else {
+                return s
+            }
+        },
         async invoke() {
-            const reqSchema = resolveSchema(this.command.request.schema)
+            const reqSchema = this.resolveSchema(this.command.request.schema)
             let reqValue = {}
             if (reqSchema === 'integer') {
                 reqValue = parseInt(this.request)
@@ -36,6 +34,7 @@ export default {
     },
     template: `
         <div :title="command.name">{{command.displayName || command.name}}</div>
+        <div>{{command.request.name || '' }} <i>[{{resolveSchema(command.request.schema)}}]</i></div>
         <textarea v-model="request">
         </textarea>
         <br />
