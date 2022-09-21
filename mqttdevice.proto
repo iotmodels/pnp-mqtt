@@ -3,18 +3,27 @@
 option csharp_namespace = "mqttdevice";
 import "google/protobuf/timestamp.proto";
 
-message Telemetry {
+message Telemetries {
 	double temperature = 1; 
+	double workingSet = 2;
 }
 
 message Properties {
 	string sdkInfo = 1;
-	int32 interval = 2;
-	google.protobuf.Timestamp started = 3;
+	google.protobuf.Timestamp started = 2;
+}
+
+message WProperties {
+	int32 interval = 1;
+}
+
+service Commands {
+	rpc echo(echoRequest) returns (echoResponse);
+	rpc echo2(echoRequest) returns (echoResponse);
 }
 
 message echoRequest {
-	string inEcho =1;
+	string inEcho = 1;
 }
 
 message echoResponse {

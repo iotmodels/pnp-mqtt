@@ -11,7 +11,7 @@ const mqttCreds = {
 let client
 let deviceId
 
-let Telemetry
+let Telemetries
 let Properties
 let echoRequest
 let echoResponse
@@ -26,13 +26,11 @@ const callEcho = () => {
 
 const start = () => {
 
-
     const echoBtn = gbid('echoBtn')
     echoBtn.onclick = callEcho
 
-
     const el = document.getElementById('chart')
-    const data = [] //[{x:1, y:1}, {x:2, y:5}]
+    const data = [] 
     
     let startTime = Date.now();
     const chart = new TimeChart(el, {
@@ -44,7 +42,7 @@ const start = () => {
  
    protobuf.load('mqttdevice.proto')
     .then(function(root) {
-        Telemetry = root.lookupType('Telemetry')
+        Telemetries = root.lookupType('Telemetries')
         Properties = root.lookupType('Properties')
         echoRequest = root.lookupType('echoRequest')
         echoResponse = root.lookupType('echoResponse')
@@ -68,7 +66,7 @@ const start = () => {
         }
         const what = segments[2]
         if (what === 'telemetry') {
-            const tel = Telemetry.decode(message)
+            const tel = Telemetries.decode(message)
             data.push({x: i++, y: tel.temperature})
             if (data.length>10) {
                 data.shift()
