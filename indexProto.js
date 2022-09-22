@@ -45,6 +45,10 @@ const setWProp = () => {
 
 const start = () => {
 
+    const qs =  new URLSearchParams(window.location.search)
+    deviceId = qs.get('id')
+    gbid('deviceId').innerText = deviceId
+
     const echoBtn = gbid('echoBtn')
     echoBtn.onclick = callEcho
 
@@ -85,19 +89,20 @@ const start = () => {
     client = mqtt.connect(`${mqttCreds.useTls ? 'wss' : 'ws'}://${mqttCreds.hostName}:${mqttCreds.port}/mqtt`, {
                 clientId: mqttCreds.clientId, username: mqttCreds.userName, password: mqttCreds.password })
                 client.on('connect', () => {
-                    client.subscribe('grpc/+/tel')
-                    client.subscribe('grpc/+/props/#')
-                    client.subscribe('grpc/+/cmd/+/resp')
+                    client.subscribe(`grpc/${deviceId}/tel`)
+                    client.subscribe(`grpc/${deviceId}/props`)
+                    client.subscribe(`grpc/${deviceId}/props/+/ack`)
+                    client.subscribe(`grpc/${deviceId}/cmd/+/resp`)
                 })
                 
     let i =0
     client.on('message', (topic, message) => {
         console.log(topic)
         const segments = topic.split('/')
-        deviceId = segments[1]
-        if (deviceId) {
-            gbid('deviceId').innerText = deviceId
-        }
+        // deviceId = segments[1]
+        // if (deviceId) {
+        //     gbid('deviceId').innerText = deviceId
+        // }
         const what = segments[2]
         if (what === 'tel') {
             const tel = Telemetries.decode(message)

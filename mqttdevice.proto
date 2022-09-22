@@ -1,6 +1,6 @@
 ﻿syntax = "proto3";
 
-option csharp_namespace = "mqtt_grpc_device";
+option csharp_namespace = "mqtt_grpc_device_protos";
 import "google/protobuf/timestamp.proto";
 
 // @topic: -> grpc/{clientId}/tel[/{telName}]
@@ -38,7 +38,8 @@ message echoRequest {
 }
 
 message echoResponse {
-	string outEcho = 1;
+	int32 status = 1;
+	string outEcho = 2;
 }
 
 enum getRuntimeStatsMode {
@@ -51,5 +52,6 @@ message getRuntimeStatsRequest {
 }
 
 message getRuntimeStatsResponse {
-	map<string,string> diagResults = 1;
+	int32 status = 1;
+	map<string,string> diagResults = 2;
 }
