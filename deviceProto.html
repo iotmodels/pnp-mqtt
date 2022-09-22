@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>PnP MQTT - device detail</title>
+    <script src="https://unpkg.com/vue@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.3/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <link href="style.css" rel="stylesheet" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div id="app" v-cloak>
+        <device-header :device="device" :modelpath="modelpath"></device-header>
+        <div>
+            <h3>Commands</h3>
+            <ul>
+                <li class="raw" v-for="c in commands">
+                    <command :command="c" :device-id="gv(device,'deviceId')" @command-invoked="onCommand" :response-msg="c.responseMsg"></command>
+                </li>
+            </ul>
+        </div>
+        <div>
+            <h3>Device Properties</h3>
+            <ul>
+                <li class="raw" v-for="p in properties">
+                    <reported-property v-if="p.writable!=true" :property="p" :device-props="device.properties"></reported-property>
+                    <writable-property v-if="p.writable===true" :property="p" :device-props="device.properties" :schema="p.schema" @prop-updated="handlePropUpdate"></writable-property>
+                </li>
+            </ul>
+        </div>
+        <div v-if="telemetries.length > 0">
+            <h3>Telemetry</h3>
+            <ul>
+                <li class="raw" v-for="t in telemetries">
+                    <telemetry :telemetry="t" :telemetry-values="telemetryValues"></telemetry>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <script type="module">
+        import device from './device.js'
+        import DeviceHeader from './DeviceHeader.js'
+        import Command from './Command.js'
+        import Telemetry from './Telemetry.js'
+        import ReportedProperty from './ReportedProperty.js'
+        import WritableProperty from './WritableProperty.js'
+        const { createApp } = Vue
+        const app = createApp(device)
+        app.component('Command', Command)
+        app.component('Telemetry', Telemetry)
+        app.component('ReportedProperty', ReportedProperty)
+        app.component('WritableProperty', WritableProperty)
+        app.component('DeviceHeader', DeviceHeader)
+        app.mount('#app')
+    </script>
+</body>
+</html>
