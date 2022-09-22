@@ -13,21 +13,34 @@ let deviceId
 
 let Telemetries
 let Properties
+let WProperties
 let echoRequest
 let echoResponse
 
 const callEcho = () => {
     const echoReq = gbid('echoReq').value
-    const topic = `pnp/${deviceId}/commands/echo`
     const msg = echoRequest.create({inEcho: echoReq})
     const payload = echoRequest.encode(msg).finish()
+    const topic = `pnp/${deviceId}/commands/echo`
     client.publish(topic, payload, {qos:1, retain:false})
+}
+
+const setWProp = () => {
+    const propTextVal = gbid('interval_set').value
+    const msg = WProperties.create({interval: propTextVal})
+    const payload = WProperties.encode(msg).finish()
+    const topic = `pnp/${deviceId}/props/interval/set`
+    client.publish(topic, payload, {qos:1, retain:true})
 }
 
 const start = () => {
 
     const echoBtn = gbid('echoBtn')
     echoBtn.onclick = callEcho
+
+    const intervalBtn = gbid('intervalBtn')
+    intervalBtn.onclick = setWProp
+
 
     const el = document.getElementById('chart')
     const data = [] 
@@ -44,6 +57,7 @@ const start = () => {
     .then(function(root) {
         Telemetries = root.lookupType('Telemetries')
         Properties = root.lookupType('Properties')
+        WProperties = root.lookupType('WProperties')
         echoRequest = root.lookupType('echoRequest')
         echoResponse = root.lookupType('echoResponse')
     })
@@ -53,7 +67,7 @@ const start = () => {
                 clientId: mqttCreds.clientId, username: mqttCreds.userName, password: mqttCreds.password })
                 client.on('connect', () => {
                     client.subscribe('pnp/+/telemetry')
-                    client.subscribe('pnp/+/props/#')
+                    client.subscribe('pnp/+/props/+')
                     client.subscribe('pnp/+/commands/echo/resp/+')
                 })
                 
@@ -75,12 +89,22 @@ const start = () => {
         }
 
         if (what === 'props') {
-            const prop = Properties.decode(message)
-            if (prop.sdkInfo) {
-                gbid('sdkInfo').innerText = prop.sdkInfo
-            }
-            if (prop.started) {
-                gbid('started').innerText = new Date(prop.started.seconds * 1000 + prop.started.nanos/1000)
+            if (topic.endsWith('/set')) {
+                const wprop = WProperties.decode(message)
+                if (wprop.interval) {
+                    gdbi('interval_set').value = wprop.interval
+                }
+            } else {
+                const prop = Properties.decode(message)
+                if (prop.sdkInfo) {
+                    gbid('sdkInfo').innerText = prop.sdkInfo
+                }
+                if (prop.started) {
+                    gbid('started').innerText = new Date(prop.started.seconds * 1000 + prop.started.nanos/1000)
+                }
+                if (prop.interval) {
+                    gbid('interval').innerText = prop.interval
+                }
             }
         }
 
