@@ -56,12 +56,15 @@ const start = () => {
 
 
     const el = document.getElementById('chart')
-    const data = [] 
-    
+    const dataTemperature = [] 
+    const dataWorkingSet = []
     let startTime = Date.now();
     const chart = new TimeChart(el, {
-        series: [{data, name: 'temperature'}],
-        lineWidth: 5,
+        series: [
+            {data: dataTemperature, name: 'temperature'},
+            {data: dataWorkingSet, name: 'workingSet', color: 'red'}
+        ],
+        lineWidth: 5
         //baseTime: startTime
     });
 
@@ -96,9 +99,14 @@ const start = () => {
         const what = segments[2]
         if (what === 'telemetry') {
             const tel = Telemetries.decode(message)
-            data.push({x: i++, y: tel.temperature})
-            if (data.length>100) {
-                data.shift()
+            if (tel.temperature) {
+                dataTemperature.push({x: i++, y: tel.temperature})
+                // if (dataTemperature.length>100) {
+                //     dataTemperature.shift()
+                // }
+            }
+            if (tel.workingSet) {
+                dataWorkingSet.push({x:i, y: tel.workingSet / 2000000 })
             }
             chart.update()
         }
