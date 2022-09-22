@@ -16,12 +16,22 @@ let Properties
 let WProperties
 let echoRequest
 let echoResponse
+let getRuntimeStatsRequest
+let getRuntimeStatsResponse
 
 const callEcho = () => {
     const echoReq = gbid('echoReq').value
     const msg = echoRequest.create({inEcho: echoReq})
     const payload = echoRequest.encode(msg).finish()
     const topic = `pnp/${deviceId}/commands/echo`
+    client.publish(topic, payload, {qos:1, retain:false})
+}
+
+const callgetRuntimeStats = () => {
+    const echoReq = gbid('getRuntimeStatsReq').value
+    const msg =  getRuntimeStatsRequest.create({mode: echoReq})
+    const payload = getRuntimeStatsRequest.encode(msg).finish()
+    const topic = `pnp/${deviceId}/commands/getRuntimeStats`
     client.publish(topic, payload, {qos:1, retain:false})
 }
 
@@ -37,6 +47,9 @@ const start = () => {
 
     const echoBtn = gbid('echoBtn')
     echoBtn.onclick = callEcho
+
+    const getRuntimeStatsBtn = gbid('getRuntimeStatsBtn')
+    getRuntimeStatsBtn.onclick = callgetRuntimeStats
 
     const intervalBtn = gbid('intervalBtn')
     intervalBtn.onclick = setWProp
@@ -60,6 +73,8 @@ const start = () => {
         WProperties = root.lookupType('WProperties')
         echoRequest = root.lookupType('echoRequest')
         echoResponse = root.lookupType('echoResponse')
+        getRuntimeStatsRequest = root.lookupType('getRuntimeStatsRequest')
+        getRuntimeStatsResponse = root.lookupType('getRuntimeStatsResponse')
     })
     .catch(e => console.error(e))
 
@@ -68,7 +83,7 @@ const start = () => {
                 client.on('connect', () => {
                     client.subscribe('pnp/+/telemetry')
                     client.subscribe('pnp/+/props/+')
-                    client.subscribe('pnp/+/commands/echo/resp/+')
+                    client.subscribe('pnp/+/commands/+/resp/+')
                 })
                 
     let i =0
@@ -82,7 +97,7 @@ const start = () => {
         if (what === 'telemetry') {
             const tel = Telemetries.decode(message)
             data.push({x: i++, y: tel.temperature})
-            if (data.length>10) {
+            if (data.length>100) {
                 data.shift()
             }
             chart.update()
@@ -110,8 +125,14 @@ const start = () => {
 
         if (what === 'commands') {
             const cmdName = segments[3]
-            const respValue = echoResponse.decode(message)
-            gbid('echoResp').innerText = respValue.outEcho
+            if (cmdName === 'echo') {
+                const respValue = echoResponse.decode(message)
+                gbid('echoResp').innerText = respValue.outEcho
+            }
+            if (cmdName === 'getRuntimeStats') {
+                const respValue = getRuntimeStatsResponse.decode(message)
+                gbid('getRuntimeStatsResp').innerText = JSON.stringify(respValue.diagResults, null, 2)
+            }
         }
     })
 }
