@@ -13,17 +13,17 @@ let deviceId
 
 let Telemetries
 let Properties
-let WProperties
 let echoRequest
 let echoResponse
-let getRuntimeStatsRequest
-let getRuntimeStatsResponse
+let ack
+//let getRuntimeStatsRequest
+//let getRuntimeStatsResponse
 
 const callEcho = () => {
     const echoReq = gbid('echoReq').value
     const msg = echoRequest.create({inEcho: echoReq})
     const payload = echoRequest.encode(msg).finish()
-    const topic = `pnp/${deviceId}/commands/echo`
+    const topic = `grpc/${deviceId}/cmd/echo`
     client.publish(topic, payload, {qos:1, retain:false})
 }
 
@@ -31,15 +31,15 @@ const callgetRuntimeStats = () => {
     const echoReq = gbid('getRuntimeStatsReq').value
     const msg =  getRuntimeStatsRequest.create({mode: echoReq})
     const payload = getRuntimeStatsRequest.encode(msg).finish()
-    const topic = `pnp/${deviceId}/commands/getRuntimeStats`
+    const topic = `grpc/${deviceId}/cmd/getRuntimeStats`
     client.publish(topic, payload, {qos:1, retain:false})
 }
 
 const setWProp = () => {
     const propTextVal = gbid('interval_set').value
-    const msg = WProperties.create({interval: propTextVal})
-    const payload = WProperties.encode(msg).finish()
-    const topic = `pnp/${deviceId}/props/interval/set`
+    const msg = Properties.create({interval: propTextVal})
+    const payload = Properties.encode(msg).finish()
+    const topic = `grpc/${deviceId}/props/interval/set`
     client.publish(topic, payload, {qos:1, retain:true})
 }
 
@@ -73,31 +73,33 @@ const start = () => {
     .then(function(root) {
         Telemetries = root.lookupType('Telemetries')
         Properties = root.lookupType('Properties')
-        WProperties = root.lookupType('WProperties')
+        //WProperties = root.lookupType('WProperties')
         echoRequest = root.lookupType('echoRequest')
         echoResponse = root.lookupType('echoResponse')
-        getRuntimeStatsRequest = root.lookupType('getRuntimeStatsRequest')
-        getRuntimeStatsResponse = root.lookupType('getRuntimeStatsResponse')
+        ack = root.lookupType('ack')
+        //getRuntimeStatsRequest = root.lookupType('getRuntimeStatsRequest')
+        //getRuntimeStatsResponse = root.lookupType('getRuntimeStatsResponse')
     })
     .catch(e => console.error(e))
 
     client = mqtt.connect(`${mqttCreds.useTls ? 'wss' : 'ws'}://${mqttCreds.hostName}:${mqttCreds.port}/mqtt`, {
                 clientId: mqttCreds.clientId, username: mqttCreds.userName, password: mqttCreds.password })
                 client.on('connect', () => {
-                    client.subscribe('pnp/+/telemetry')
-                    client.subscribe('pnp/+/props/+')
-                    client.subscribe('pnp/+/commands/+/resp/+')
+                    client.subscribe('grpc/+/tel')
+                    client.subscribe('grpc/+/props/#')
+                    client.subscribe('grpc/+/cmd/+/resp')
                 })
                 
     let i =0
     client.on('message', (topic, message) => {
+        console.log(topic)
         const segments = topic.split('/')
         deviceId = segments[1]
         if (deviceId) {
             gbid('deviceId').innerText = deviceId
         }
         const what = segments[2]
-        if (what === 'telemetry') {
+        if (what === 'tel') {
             const tel = Telemetries.decode(message)
             if (tel.temperature) {
                 dataTemperature.push({x: i++, y: tel.temperature})
@@ -113,10 +115,13 @@ const start = () => {
 
         if (what === 'props') {
             if (topic.endsWith('/set')) {
-                const wprop = WProperties.decode(message)
+                const wprop = Properties.decode(message)
                 if (wprop.interval) {
-                    gdbi('interval_set').value = wprop.interval
+                    gbid('interval_set').value = wprop.interval
                 }
+            }else if (topic.endsWith('/ack')) {
+                const ackMsg = ack.decode(message)
+                gbid('interval_ack').innerText = ackMsg.status + ackMsg.description 
             } else {
                 const prop = Properties.decode(message)
                 if (prop.sdkInfo) {
@@ -130,8 +135,7 @@ const start = () => {
                 }
             }
         }
-
-        if (what === 'commands') {
+        if (what === 'cmd') {
             const cmdName = segments[3]
             if (cmdName === 'echo') {
                 const respValue = echoResponse.decode(message)
