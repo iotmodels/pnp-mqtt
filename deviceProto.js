@@ -96,6 +96,7 @@ export default {
         },
         async initModel() {
             const qs =  new URLSearchParams(window.location.search)
+            document.title = qs.get('id')
             await this.loadModel(qs.get('model-id'))
             this.device = { 
                 deviceId: qs.get('id'), 
@@ -143,15 +144,15 @@ export default {
                     }else if (topic.endsWith('/ack')) {
                         const ackMsg = ack.decode(message)
                         console.log(ackMsg)
-                        this.device.properties.reported[propName].ac = ack.status
-                        this.device.properties.reported[propName].ad = ack.description
+                        const ackValue = Properties.decode(ackMsg.value.value)
+                        this.device.properties.reported[propName] = {ac: ackMsg.status, ad : ackMsg.description, av: 0, value : ackValue[propName] }
                         //gbid('interval_ack').innerText = ackMsg.status + ackMsg.description 
                     } else {
                         const prop = Properties.decode(message)
                         Object.keys(Properties.fields).forEach(k => {
                             const p = this.properties.filter(p => p.name === k)[0]
                             if (p.writable) {
-                                this.device.properties.reported[k] = { value : prop[k], ac: 0, ad: '' }
+                                this.device.properties.reported[k] =prop[k]
                             } else {
                                 this.device.properties.reported[k] = prop[k]
                             }
@@ -174,7 +175,7 @@ export default {
                 }
             })
 
-            document.title = this.device.deviceId
+           
         },
         async handlePropUpdate(name, val, schema) {
             const resSchema = resolveSchema(schema)
