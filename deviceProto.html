@@ -33,11 +33,13 @@
         </div>
         <div v-if="telemetries.length > 0">
             <h3>Telemetry</h3>
+            <a :href="'telemetryChart.html?id='+device.deviceId">Chart</a>
             <ul>
                 <li class="raw" v-for="t in telemetries">
                     <telemetry :telemetry="t" :telemetry-values="telemetryValues"></telemetry>
                 </li>
             </ul>
+            
         </div>
     </div>
     

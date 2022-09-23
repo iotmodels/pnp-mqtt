@@ -73,7 +73,7 @@ const start = () => {
     });
 
  
-   protobuf.load('mqttdevice.proto')
+   protobuf.load('../mqtt-grpc-device.proto')
     .then(function(root) {
         Telemetries = root.lookupType('Telemetries')
         Properties = root.lookupType('Properties')
