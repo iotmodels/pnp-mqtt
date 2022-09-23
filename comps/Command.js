@@ -26,7 +26,7 @@ export default {
                 reqValue = parseInt(this.request)
             } else if (reqSchema === 'boolean') {
                 reqValue = new Boolean(this.request)
-            } else if (reqSchema === 'string') {
+            } else {
                 reqValue = this.request
             }
             this.$emit('commandInvoked', this.command.name, reqValue)
