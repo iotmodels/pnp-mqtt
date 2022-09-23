@@ -174,7 +174,8 @@ export default {
                     const cmd = this.commands.filter(c => c.name === cmdName)[0]
                     const resType = root.lookupType(cmd.response.name)
                     const resValue = resType.decode(message)
-                    cmd.responseMsg = resValue['outEcho']
+                    const resTypeSecond = Object.keys(resType.fields)[1] // not status
+                    cmd.responseMsg = resValue[resTypeSecond]
                 }
                 if (topic === `grpc/${this.device.deviceId}/tel`) {
                     const tel = Telemetries.decode(message)
@@ -218,7 +219,10 @@ export default {
             const topic = `grpc/${this.device.deviceId}/cmd/${cmdName}`
             const cmd = this.commands.filter(c => c.name === cmdName)[0]
             const reqType = root.lookupType(cmd.request.name)
-            const msg = reqType.create({inEcho: cmdReq})
+            const reqTypeFirst = Object.keys(reqType.fields)[0]
+            const req = {}
+            req[reqTypeFirst] = cmdReq
+            const msg = reqType.create(req)
             const payload = reqType.encode(msg).finish()
             client.publish(topic,payload, {qos:1, retain: false})            
         },
