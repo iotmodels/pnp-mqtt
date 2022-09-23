@@ -48,6 +48,13 @@ export default {
                 }
             })
         },
+        getDeviceUrl(d) {
+            if (d.modelId.startsWith('dtmi')) {
+                window.location.href = `device.html?id=${d.deviceId}&model-id=${d.modelId}`
+            } else {
+                window.location.href = `deviceProto.html?id=${d.deviceId}&model-id=${d.modelId}`
+            }
+        },
         removeDevice(did) {
             const topic = `pnp/${did}/birth`
             client.publish(topic, '', { retain: true, qos: 1 })
@@ -61,6 +68,9 @@ export default {
             
         },
         disconnect() {
+            const mqttCreds = JSON.parse(window.localStorage.getItem('mqttCreds'))
+            mqttCreds.reconnect = false
+            window.localStorage.setItem('mqttCreds', JSON.stringify(mqttCreds))
             this.connected = false
             client.end()
         },

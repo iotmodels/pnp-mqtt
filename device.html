@@ -42,11 +42,11 @@
     
     <script type="module">
         import device from './device.js'
-        import DeviceHeader from './DeviceHeader.js'
-        import Command from './Command.js'
-        import Telemetry from './Telemetry.js'
-        import ReportedProperty from './ReportedProperty.js'
-        import WritableProperty from './WritableProperty.js'
+        import DeviceHeader from './comps/DeviceHeader.js'
+        import Command from './comps/Command.js'
+        import Telemetry from './comps/Telemetry.js'
+        import ReportedProperty from './comps/ReportedProperty.js'
+        import WritableProperty from './comps/WritableProperty.js'
         const { createApp } = Vue
         const app = createApp(device)
         app.component('Command', Command)

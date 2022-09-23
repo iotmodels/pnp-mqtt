@@ -152,9 +152,14 @@ export default {
                         Object.keys(Properties.fields).forEach(k => {
                             const p = this.properties.filter(p => p.name === k)[0]
                             if (p.writable) {
-                                this.device.properties.reported[k] =prop[k]
+                                this.device.properties.reported[k] = {value: prop[k], ac:0, ad:''}
                             } else {
-                                this.device.properties.reported[k] = prop[k]
+                                 const field = Properties.fields[k]
+                                 if (field.type==='google.protobuf.Timestamp') {
+                                    this.device.properties.reported[k] = new Date(prop[k].seconds * 1000 + prop[k].nanos/1000)
+                                 } else {
+                                     this.device.properties.reported[k] =prop[k]
+                                 }
                             }
                         })
                     }

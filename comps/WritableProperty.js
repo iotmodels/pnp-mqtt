@@ -9,7 +9,7 @@
         getPropColorState(name) {
             const repAck = this.gv(this.deviceProps, 'reported.' + name)
             if (repAck.ac === 200) return 'lightgreen'
-            if (repAck.ac === 203) return 'silver'
+            if (repAck.ac === 203 || repAck.ac === 0) return 'silver'
             return 'lightpink'
         },
         updateProp() {
