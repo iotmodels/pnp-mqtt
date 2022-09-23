@@ -13,7 +13,7 @@
 <body>
     <div id="app">
         <div v-if="connected">{{hostName}} <span class="link"  @click="disconnect">disconnect</span></div>
-        <connection  v-show="!connected" @config-changed="onConfigChanged"></connection>
+        <connection  v-if="!connected" @config-changed="onConfigChanged"></connection>
         <table v-if="connected">
             <thead>
                 <tr>

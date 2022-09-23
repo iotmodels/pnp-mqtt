@@ -40,7 +40,8 @@ export default {
     },
     methods: {
         async loadModel(modelId) {
-            root = await protobuf.load('mqttdevice.proto')
+            root = await protobuf.load(modelId)
+            this.modelpath = modelId
             Telemetries = root.lookupType('Telemetries')
             Properties = root.lookupType('Properties')
             PropertiesSetter = root.lookupService('PropertiesSetter')
@@ -143,7 +144,6 @@ export default {
                         }
                     }else if (topic.endsWith('/ack')) {
                         const ackMsg = ack.decode(message)
-                        console.log(ackMsg)
                         const ackValue = Properties.decode(ackMsg.value.value)
                         this.device.properties.reported[propName] = {ac: ackMsg.status, ad : ackMsg.description, av: 0, value : ackValue[propName] }
                         //gbid('interval_ack').innerText = ackMsg.status + ackMsg.description 
@@ -152,7 +152,12 @@ export default {
                         Object.keys(Properties.fields).forEach(k => {
                             const p = this.properties.filter(p => p.name === k)[0]
                             if (p.writable) {
-                                this.device.properties.reported[k] = {value: prop[k], ac:0, ad:''}
+                                if (this.device.properties.reported[k]) {
+                                    this.device.properties.reported[k].value = prop[k]
+                                } else {
+                                    this.device.properties.reported[k] = {value: prop[k], ac:0, ad:''}
+                                }
+
                             } else {
                                  const field = Properties.fields[k]
                                  if (field.type==='google.protobuf.Timestamp') {
