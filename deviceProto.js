@@ -1,11 +1,6 @@
 import mqtt from './mqttClient.js'
 let client
 
-const repoBaseUrl = 'https://iotmodels.github.io/dmr/' // 'https://devicemodels.azure.com'
-const dtmiToPath = function (dtmi) {
-    return `/${dtmi.toLowerCase().replace(/:/g, '/').replace(';', '-')}.json`
-}
-
 const isBuffer = obj => {
     return obj != null && obj.constructor != null &&
         typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
@@ -23,8 +18,11 @@ const resolveSchema = s => {
         return s
     }
 }
-
-
+let root
+let Telemetries
+let Properties
+let Commands
+let PropertiesSetter
 export default {
     data: () => ({
         device: {},
@@ -40,8 +38,61 @@ export default {
         this.fetchData()
     },
     methods: {
+        async loadModel(modelId) {
+            root = await protobuf.load('mqttdevice.proto')
+            Telemetries = root.lookupType('Telemetries')
+            Properties = root.lookupType('Properties')
+            PropertiesSetter = root.lookupService('PropertiesSetter')
+            Commands = root.lookupService('Commands')
+            Object.keys(Telemetries.fields).forEach( t => {
+                this.telemetries.push({name: Telemetries.fields[t].name})
+            })
+            Object.keys(Properties.fields).forEach( t => {
+                this.properties.push({name: Properties.fields[t].name, writable: false})
+            })
+            Object.keys(Commands.methodsArray).forEach(k => {
+                const method = Commands.methodsArray[k]
+                const req = root.lookupType(method.requestType)
+                const res = root.lookupType(method.responseType)
+                this.commands.push({
+                    name: method.name,
+                    request: {
+                        name : req.name,
+                        schema: ''
+                    },
+                    response: {
+                        name : res.name,
+                        schema: ''
+                    }
+                })
+                const curCmd = this.commands.filter(c => c.name === method.name)[0]
+                Object.keys(req.fields)
+                    .forEach(k => { 
+                        curCmd.request.schema += req.fields[k].type
+                    })
+                Object.keys(res.fields)
+                    .forEach(k => { 
+                        curCmd.response.schema += res.fields[k].type
+                    })
+
+            })
+            Object.keys(PropertiesSetter.methodsArray).forEach(k => {
+                const method = PropertiesSetter.methodsArray[k]
+                const req = root.lookupType(method.requestType)
+                Object.keys(req.fields)
+                    .filter(f => f === method.name.substring(4)) // only props by set_ 
+                    .forEach(k => {
+                        //console.log('    ' + req.fields[k].name + ': ' + req.fields[k].type)
+                        const prop = this.properties.filter(p=>p.name===k)[0]
+                        prop.writable=true
+                    })    
+                const res = root.lookupType(method.responseType)
+                Object.keys(res.fields).forEach(k => console.log('    ' + res.fields[k].name + ': ' + res.fields[k].type))    
+            })
+        },
         async initModel() {
             const qs =  new URLSearchParams(window.location.search)
+            await this.loadModel(qs.get('model-id'))
             this.device = { 
                 deviceId: qs.get('id'), 
                 modelId: qs.get('model-id'), 
@@ -49,18 +100,17 @@ export default {
                     reported: {},
                     desired: {}
                 }}
-            this.modelpath = `${repoBaseUrl}${dtmiToPath(this.device.modelId)}`
-            const model = await (await window.fetch(this.modelpath)).json()
-            this.properties = model.contents.filter(c => c['@type'].includes('Property'))
-            this.commands = model.contents.filter(c => c['@type'].includes('Command'))
-            this.telemetries = model.contents.filter(c => c['@type'].includes('Telemetry'))
         },
         async fetchData() {
           
             client.on('error', e => console.error(e))
             client.on('connect', () => {
                 console.log('connected', client.connected)
-                client.subscribe(`pnp/${this.device.deviceId}/#`)
+                    client.subscribe(`grpc/${this.device.deviceId}/tel`)
+                    client.subscribe(`pnp/${this.device.deviceId}/birth`)
+                    client.subscribe(`grpc/${this.device.deviceId}/props`)
+                    client.subscribe(`grpc/${this.device.deviceId}/props/+/ack`)
+                    client.subscribe(`grpc/${this.device.deviceId}/cmd/+/resp`)
                 })
             client.on('message', (topic, message) => {
                 let msg = {}
@@ -73,34 +123,42 @@ export default {
                     }
 
                 }
-                //const msg = JSON.parse(message)
-                // console.log(topic, msg)
                 const ts = topic.split('/')
+                const what = ts[2]
                 if (topic === `pnp/${this.device.deviceId}/birth`) {
                     this.device.connectionState = msg.status === 'online' ? 'Connected' : 'Disconnected'
                     this.device.lastActivityTime = msg.when
                 }
-                if (topic.startsWith(`pnp/${this.device.deviceId}/props`)) {
+                if (topic.startsWith(`grpc/${this.device.deviceId}/props`)) {
                     const propName = ts[3]
-                    if (topic.endsWith('/set'))
-                    {
-                        this.device.properties.desired[propName] = msg
+                    if (topic.endsWith('/set')) {
+                        const wprop = Properties.decode(message)
+                        if (wprop.interval) {
+                            this.device.properties.desired[propName] = wprop[propName]
+                        }
+                    }else if (topic.endsWith('/ack')) {
+                        const ackMsg = ack.decode(message)
+                        console.log(ackMsg)
+                        //gbid('interval_ack').innerText = ackMsg.status + ackMsg.description 
                     } else {
-                        this.device.properties.reported[propName] = msg
+                        const prop = Properties.decode(message)
+                        Object.keys(Properties.fields).forEach(k => {
+                            this.device.properties.reported[k] = prop[k]
+                        })
                     }
                 }
-                if (topic.startsWith(`pnp/${this.device.deviceId}/commands`)) {
+                if (topic.startsWith(`grpc/${this.device.deviceId}/cmd`)) {
                     const cmdName = ts[3]
                     const cmd = this.commands.filter(c => c.name === cmdName)[0]
-                    // const cmdRespSchema = resolveSchema(cmd.response.schema)
-                    cmd.responseMsg = msg
+                    const resType = root.lookupType(cmd.response.name)
+                    const resValue = resType.decode(message)
+                    cmd.responseMsg = resValue['outEcho']
                 }
-                if (topic === `pnp/${this.device.deviceId}/telemetry`) {
-                    const maxItems = 10
-                    const telName = Object.keys(msg)[0]
-                    Object.keys(msg).forEach(k => {
+                if (topic === `grpc/${this.device.deviceId}/tel`) {
+                    const tel = Telemetries.decode(message)
+                    Object.keys(Telemetries.fields).forEach(k => {
                         this.telemetryValues[k] = []
-                        this.telemetryValues[k].push(msg[k])
+                        this.telemetryValues[k].push(tel[k])
                     })
                 }
             })
@@ -111,7 +169,7 @@ export default {
             const resSchema = resolveSchema(schema)
             this.device.properties.desired[name] = ''
             this.device.properties.reported[name] = ''
-            const topic = `pnp/${this.device.deviceId}/props/${name}/set`
+            const topic = `grpc/${this.device.deviceId}/props/${name}/set`
             let desiredValue = {}
             switch (resSchema) {
                 case 'string':
@@ -133,8 +191,12 @@ export default {
             client.publish(topic,JSON.stringify(desiredValue), {qos:1, retain: true})            
         },
         onCommand (cmdName, cmdReq) {
-            const topic = `pnp/${this.device.deviceId}/commands/${cmdName}`
-            client.publish(topic,JSON.stringify(cmdReq), {qos:1, retain: false})            
+            const topic = `grpc/${this.device.deviceId}/cmd/${cmdName}`
+            const cmd = this.commands.filter(c => c.name === cmdName)[0]
+            const reqType = root.lookupType(cmd.request.name)
+            const msg = reqType.create({inEcho: cmdReq})
+            const payload = reqType.encode(msg).finish()
+            client.publish(topic,payload, {qos:1, retain: false})            
         },
         formatDate(d) {
             if (d === '0001-01-01T00:00:00Z') return ''

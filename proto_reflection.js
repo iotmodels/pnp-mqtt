@@ -37,7 +37,7 @@ window.onload = async () => {
         const method = Commands.methodsArray[k]
         console.log(method.name)
         const req = root.lookupType(method.requestType)
-        console.log('  req: ')
+        console.log('  req: ' + req.name)
         Object.keys(req.fields)
             .forEach(k => { 
                 console.log('    ' + k + ': ' + req.fields[k].type)

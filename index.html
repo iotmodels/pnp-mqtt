@@ -25,7 +25,7 @@
             </thead>
             <tbody>
                 <tr v-for="d in devices">
-                    <td><a :href="'indexProto.html?id=' + d.deviceId + '&model-id=' + d.modelId">{{d.deviceId}}</a></td>
+                    <td><a :href="'deviceProto.html?id=' + d.deviceId + '&model-id=' + d.modelId">{{d.deviceId}}</a></td>
                     <td :style="{color: d.status === 'online' ? 'green' : 'red'}">{{d.status}}</td>
                     <td>{{d.modelId}}</td>
                     <td>{{formatDate(d.when)}}</td>
