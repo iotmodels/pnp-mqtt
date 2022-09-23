@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https:////unpkg.com/mqtt/dist/mqtt.js"></script>
+    <script src="https://unpkg.com/protobufjs@7.1.1/dist/protobuf.js" type="module"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-color@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-format@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-interpolate@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-time@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-time-format@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-scale@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-selection@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-axis@3"></script>
+    <script src="https://huww98.github.io/TimeChart/dist/timechart.min.js"></script>
+
+    <title>MQTT Client</title>
+</head>
+<body>
+    <div id="app">
+        <h3 id="deviceId"></h3>
+        <div class="deviceProps">
+            <div>
+                sdkInfo <span class="prop" id="sdkInfo"></span>
+            </div>
+            <div>
+                started <span class="prop" id="started"></span>
+            </div>
+        </div>
+        <div>
+            <div>
+                <h4>interval</h4>
+                interval <span class="prop" id="interval"></span>
+                <input type="text" id="interval_set">
+                <button id="intervalBtn">Set Interval</button>
+                ack: <span id="interval_ack"></span>
+            </div>
+        </div>
+        <div>
+            <h3>Commands</h3>
+            <div>
+                <h4>echo</h4>
+                <input type="text" id="echoReq" >
+                <button id="echoBtn">Call echo</button>
+                <pre id="echoResp"></pre>
+            </div>
+            <div>
+                <h4>getRuntimeStats</h4>
+                <input type="text" id="getRuntimeStatsReq" >
+                <button id="getRuntimeStatsBtn">Call getRuntimeStats</button>
+                <pre id="getRuntimeStatsResp"></pre>
+            </div>
+        </div>
+        <h3>Telemetry</h3>
+        <div id="telemetry">
+            <div id="chart" style="width: 60%; height: 320px;"></div>
+        </div>
+    </div>
+    <script src="indexProto.js" type="module"></script>
+</body>
+</html>

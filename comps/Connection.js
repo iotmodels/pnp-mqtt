@@ -8,6 +8,7 @@ export default {
             clientId: '',
             userName: '',
             password: '',
+            reconnect: true
         }
     },
     emits: ['configChanged'],
@@ -21,6 +22,10 @@ export default {
             this.clientId = mqttCreds.clientId
             this.userName = mqttCreds.userName
             this.password = mqttCreds.password
+            this.reconnect = mqttCreds.reconnect
+        }
+        if (this.reconnect) {
+            this.$emit('configChanged')
         }
     },
     methods: {
@@ -31,7 +36,8 @@ export default {
                 useTls: this.useTls,
                 clientId:this.clientId,
                 userName:this.userName,
-                password: this.password
+                password: this.password,
+                reconnect: this.reconnect
             }
             window.localStorage.setItem('mqttCreds', JSON.stringify(mqttCreds))
             this.$emit('configChanged')
@@ -63,6 +69,11 @@ export default {
         <p>
             <label for="password">Password</label>
             <input id="password" type="password" v-model="password" size="60">
+        </p>
+        <p>
+            <label>Reconnect</label>
+            yes <input type="radio" :value="true" v-model="reconnect">
+            no <input type="radio" :value="false" v-model="reconnect">
         </p>
         <p>
             <button class="right-button" @click="save">Connect</button>

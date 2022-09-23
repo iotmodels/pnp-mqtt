@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.3/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://unpkg.com/protobufjs@7.1.1/dist/protobuf.js" type="module"></script>
     <link href="style.css" rel="stylesheet" />
     <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
@@ -41,7 +42,7 @@
     </div>
     
     <script type="module">
-        import device from './device.js'
+        import device from './deviceProto.js'
         import DeviceHeader from './comps/DeviceHeader.js'
         import Command from './comps/Command.js'
         import Telemetry from './comps/Telemetry.js'
