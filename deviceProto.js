@@ -23,6 +23,7 @@ let Telemetries
 let Properties
 let Commands
 let PropertiesSetter
+let ack
 export default {
     data: () => ({
         device: {},
@@ -44,6 +45,7 @@ export default {
             Properties = root.lookupType('Properties')
             PropertiesSetter = root.lookupService('PropertiesSetter')
             Commands = root.lookupService('Commands')
+            ack = root.lookupType('ack')
             Object.keys(Telemetries.fields).forEach( t => {
                 this.telemetries.push({name: Telemetries.fields[t].name})
             })
@@ -84,10 +86,12 @@ export default {
                     .forEach(k => {
                         //console.log('    ' + req.fields[k].name + ': ' + req.fields[k].type)
                         const prop = this.properties.filter(p=>p.name===k)[0]
-                        prop.writable=true
+                        prop.writable = true
+                        prop.schema = 'integer'
                     })    
                 const res = root.lookupType(method.responseType)
-                Object.keys(res.fields).forEach(k => console.log('    ' + res.fields[k].name + ': ' + res.fields[k].type))    
+                Object.keys(res.fields)
+                    .forEach(k => console.log('    ' + res.fields[k].name + ': ' + res.fields[k].type))    
             })
         },
         async initModel() {
@@ -139,11 +143,18 @@ export default {
                     }else if (topic.endsWith('/ack')) {
                         const ackMsg = ack.decode(message)
                         console.log(ackMsg)
+                        this.device.properties.reported[propName].ac = ack.status
+                        this.device.properties.reported[propName].ad = ack.description
                         //gbid('interval_ack').innerText = ackMsg.status + ackMsg.description 
                     } else {
                         const prop = Properties.decode(message)
                         Object.keys(Properties.fields).forEach(k => {
-                            this.device.properties.reported[k] = prop[k]
+                            const p = this.properties.filter(p => p.name === k)[0]
+                            if (p.writable) {
+                                this.device.properties.reported[k] = { value : prop[k], ac: 0, ad: '' }
+                            } else {
+                                this.device.properties.reported[k] = prop[k]
+                            }
                         })
                     }
                 }
@@ -167,8 +178,8 @@ export default {
         },
         async handlePropUpdate(name, val, schema) {
             const resSchema = resolveSchema(schema)
-            this.device.properties.desired[name] = ''
-            this.device.properties.reported[name] = ''
+            //this.device.properties.desired[name] = ''
+            //this.device.properties.reported[name] = ''
             const topic = `grpc/${this.device.deviceId}/props/${name}/set`
             let desiredValue = {}
             switch (resSchema) {
@@ -188,7 +199,9 @@ export default {
                     console.log('schema serializer not implemented', resSchema)
                     throw new Error('Schema serializer not implemented for' + Json.stringify(resSchema))
             }
-            client.publish(topic,JSON.stringify(desiredValue), {qos:1, retain: true})            
+            const msg = Properties.create({interval: desiredValue})
+            const payload = Properties.encode(msg).finish()
+            client.publish(topic,payload, {qos:1, retain: true})            
         },
         onCommand (cmdName, cmdReq) {
             const topic = `grpc/${this.device.deviceId}/cmd/${cmdName}`
