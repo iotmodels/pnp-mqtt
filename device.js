@@ -60,7 +60,8 @@ export default {
             client.on('error', e => console.error(e))
             client.on('connect', () => {
                 console.log('connected', client.connected)
-                client.subscribe(`pnp/${this.device.deviceId}/#`)
+                client.subscribe(`device/${this.device.deviceId}/#`)
+                client.subscribe(`pnp/${this.device.deviceId}/birth`)
                 })
             client.on('message', (topic, message) => {
                 let msg = {}
@@ -80,7 +81,7 @@ export default {
                     this.device.connectionState = msg.status === 'online' ? 'Connected' : 'Disconnected'
                     this.device.lastActivityTime = msg.when
                 }
-                if (topic.startsWith(`pnp/${this.device.deviceId}/props`)) {
+                if (topic.startsWith(`device/${this.device.deviceId}/props`)) {
                     const propName = ts[3]
                     if (topic.endsWith('/set'))
                     {
@@ -89,7 +90,7 @@ export default {
                         this.device.properties.reported[propName] = msg
                     }
                 }
-                if (topic.startsWith(`pnp/${this.device.deviceId}/commands`)) {
+                if (topic.startsWith(`device/${this.device.deviceId}/commands`)) {
                     const cmdName = ts[3]
                     const cmd = this.commands.filter(c => c.name === cmdName)[0]
                     // const cmdRespSchema = resolveSchema(cmd.response.schema)
@@ -111,7 +112,7 @@ export default {
             const resSchema = resolveSchema(schema)
             this.device.properties.desired[name] = ''
             this.device.properties.reported[name] = ''
-            const topic = `pnp/${this.device.deviceId}/props/${name}/set`
+            const topic = `device/${this.device.deviceId}/props/${name}/set`
             let desiredValue = {}
             switch (resSchema) {
                 case 'string':
@@ -133,7 +134,7 @@ export default {
             client.publish(topic,JSON.stringify(desiredValue), {qos:1, retain: true})            
         },
         onCommand (cmdName, cmdReq) {
-            const topic = `pnp/${this.device.deviceId}/commands/${cmdName}`
+            const topic = `device/${this.device.deviceId}/commands/${cmdName}`
             client.publish(topic,JSON.stringify(cmdReq), {qos:1, retain: false})            
         },
         formatDate(d) {
