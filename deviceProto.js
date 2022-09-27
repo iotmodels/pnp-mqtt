@@ -211,7 +211,9 @@ export default {
                     console.log('schema serializer not implemented', resSchema)
                     throw new Error('Schema serializer not implemented for' + Json.stringify(resSchema))
             }
-            const msg = Properties.create({interval: desiredValue})
+            const prop = {}
+            prop[name] = desiredValue
+            const msg = Properties.create(prop)
             const payload = Properties.encode(msg).finish()
             client.publish(topic,payload, {qos:1, retain: true})            
         },
