@@ -112,11 +112,11 @@ export default {
             client.on('error', e => console.error(e))
             client.on('connect', () => {
                 console.log('connected', client.connected)
-                    client.subscribe(`grpc/${this.device.deviceId}/tel`)
-                    client.subscribe(`pnp/${this.device.deviceId}/birth`)
-                    client.subscribe(`grpc/${this.device.deviceId}/props`)
-                    client.subscribe(`grpc/${this.device.deviceId}/props/+/ack`)
-                    client.subscribe(`grpc/${this.device.deviceId}/cmd/+/resp`)
+                    client.subscribe(`device/${this.device.deviceId}/tel`)
+                    client.subscribe(`registry/${this.device.deviceId}/status`)
+                    client.subscribe(`device/${this.device.deviceId}/props`)
+                    client.subscribe(`device/${this.device.deviceId}/props/+/ack`)
+                    client.subscribe(`device/${this.device.deviceId}/cmd/+/resp`)
                 })
             client.on('message', (topic, message) => {
                 let msg = {}
@@ -131,11 +131,11 @@ export default {
                 }
                 const ts = topic.split('/')
                 const what = ts[2]
-                if (topic === `pnp/${this.device.deviceId}/birth`) {
+                if (topic === `registry/${this.device.deviceId}/status`) {
                     this.device.connectionState = msg.status === 'online' ? 'Connected' : 'Disconnected'
                     this.device.lastActivityTime = msg.when
                 }
-                if (topic.startsWith(`grpc/${this.device.deviceId}/props`)) {
+                if (topic.startsWith(`device/${this.device.deviceId}/props`)) {
                     const propName = ts[3]
                     if (topic.endsWith('/set')) {
                         const wprop = Properties.decode(message)
@@ -169,7 +169,7 @@ export default {
                         })
                     }
                 }
-                if (topic.startsWith(`grpc/${this.device.deviceId}/cmd`)) {
+                if (topic.startsWith(`device/${this.device.deviceId}/cmd`)) {
                     const cmdName = ts[3]
                     const cmd = this.commands.filter(c => c.name === cmdName)[0]
                     const resType = root.lookupType(cmd.response.name)
@@ -177,7 +177,7 @@ export default {
                     const resTypeSecond = Object.keys(resType.fields)[1] // not status
                     cmd.responseMsg = resValue[resTypeSecond]
                 }
-                if (topic === `grpc/${this.device.deviceId}/tel`) {
+                if (topic === `device/${this.device.deviceId}/tel`) {
                     const tel = Telemetries.decode(message)
                     Object.keys(Telemetries.fields).forEach(k => {
                         this.telemetryValues[k] = []
@@ -192,7 +192,7 @@ export default {
             const resSchema = resolveSchema(schema)
             //this.device.properties.desired[name] = ''
             //this.device.properties.reported[name] = ''
-            const topic = `grpc/${this.device.deviceId}/props/${name}/set`
+            const topic = `device/${this.device.deviceId}/props/${name}/set`
             let desiredValue = {}
             switch (resSchema) {
                 case 'string':
@@ -218,7 +218,7 @@ export default {
             client.publish(topic,payload, {qos:1, retain: true})            
         },
         onCommand (cmdName, cmdReq) {
-            const topic = `grpc/${this.device.deviceId}/cmd/${cmdName}`
+            const topic = `device/${this.device.deviceId}/cmd/${cmdName}`
             const cmd = this.commands.filter(c => c.name === cmdName)[0]
             const reqType = root.lookupType(cmd.request.name)
             const reqTypeFirst = Object.keys(reqType.fields)[0]

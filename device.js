@@ -61,7 +61,7 @@ export default {
             client.on('connect', () => {
                 console.log('connected', client.connected)
                 client.subscribe(`device/${this.device.deviceId}/#`)
-                client.subscribe(`pnp/${this.device.deviceId}/birth`)
+                client.subscribe(`registry/${this.device.deviceId}/status`)
                 })
             client.on('message', (topic, message) => {
                 let msg = {}
@@ -77,7 +77,7 @@ export default {
                 //const msg = JSON.parse(message)
                 // console.log(topic, msg)
                 const ts = topic.split('/')
-                if (topic === `pnp/${this.device.deviceId}/birth`) {
+                if (topic === `registry/${this.device.deviceId}/status`) {
                     this.device.connectionState = msg.status === 'online' ? 'Connected' : 'Disconnected'
                     this.device.lastActivityTime = msg.when
                 }
@@ -96,7 +96,7 @@ export default {
                     // const cmdRespSchema = resolveSchema(cmd.response.schema)
                     cmd.responseMsg = msg
                 }
-                if (topic === `pnp/${this.device.deviceId}/telemetry`) {
+                if (topic === `device/${this.device.deviceId}/telemetry`) {
                     const maxItems = 10
                     const telName = Object.keys(msg)[0]
                     Object.keys(msg).forEach(k => {

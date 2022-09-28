@@ -29,10 +29,10 @@ export default {
             client.on('error', e => console.error(e))
             client.on('connect', () => {
                 this.hostName = client.options.href
-                client.subscribe('pnp/+/birth')
+                client.subscribe('registry/+/status')
                 this.connected = true
             })
-            client.subscribe('pnp/+/birth')
+            client.subscribe('registry/+/status')
             client.on('message', (topic, message) => {
                 const deviceId = topic.split('/')[1]
                 const dix = this.devices.findIndex(d => d.deviceId === deviceId)
@@ -56,7 +56,7 @@ export default {
             }
         },
         removeDevice(did) {
-            const topic = `pnp/${did}/birth`
+            const topic = `registry/${did}/status`
             client.publish(topic, '', { retain: true, qos: 1 })
             const dix = this.devices.findIndex(d => d.deviceId === did)
             this.devices.splice(dix, 1)

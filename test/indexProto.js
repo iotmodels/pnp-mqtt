@@ -23,7 +23,7 @@ const callEcho = () => {
     const echoReq = gbid('echoReq').value
     const msg = echoRequest.create({inEcho: echoReq})
     const payload = echoRequest.encode(msg).finish()
-    const topic = `grpc/${deviceId}/cmd/echo`
+    const topic = `device/${deviceId}/cmd/echo`
     client.publish(topic, payload, {qos:1, retain:false})
 }
 
@@ -31,7 +31,7 @@ const callgetRuntimeStats = () => {
     const echoReq = gbid('getRuntimeStatsReq').value
     const msg =  getRuntimeStatsRequest.create({mode: echoReq})
     const payload = getRuntimeStatsRequest.encode(msg).finish()
-    const topic = `grpc/${deviceId}/cmd/getRuntimeStats`
+    const topic = `device/${deviceId}/cmd/getRuntimeStats`
     client.publish(topic, payload, {qos:1, retain:false})
 }
 
@@ -39,7 +39,7 @@ const setWProp = () => {
     const propTextVal = gbid('interval_set').value
     const msg = Properties.create({interval: propTextVal})
     const payload = Properties.encode(msg).finish()
-    const topic = `grpc/${deviceId}/props/interval/set`
+    const topic = `device/${deviceId}/props/interval/set`
     client.publish(topic, payload, {qos:1, retain:true})
 }
 
@@ -89,10 +89,10 @@ const start = () => {
     client = mqtt.connect(`${mqttCreds.useTls ? 'wss' : 'ws'}://${mqttCreds.hostName}:${mqttCreds.port}/mqtt`, {
                 clientId: mqttCreds.clientId, username: mqttCreds.userName, password: mqttCreds.password })
                 client.on('connect', () => {
-                    client.subscribe(`grpc/${deviceId}/tel`)
-                    client.subscribe(`grpc/${deviceId}/props`)
-                    client.subscribe(`grpc/${deviceId}/props/+/ack`)
-                    client.subscribe(`grpc/${deviceId}/cmd/+/resp`)
+                    client.subscribe(`device/${deviceId}/tel`)
+                    client.subscribe(`device/${deviceId}/props`)
+                    client.subscribe(`device/${deviceId}/props/+/ack`)
+                    client.subscribe(`device/${deviceId}/cmd/+/resp`)
                 })
                 
     let i =0

@@ -41,7 +41,7 @@ const start = () => {
     client = mqtt.connect(`${mqttCreds.useTls ? 'wss' : 'ws'}://${mqttCreds.hostName}:${mqttCreds.port}/mqtt`, {
                 clientId: mqttCreds.clientId, username: mqttCreds.userName, password: mqttCreds.password })
                 client.on('connect', () => {
-                    client.subscribe(`grpc/${deviceId}/tel`)
+                    client.subscribe(`device/${deviceId}/tel`)
                 })
                 
     let i =0
