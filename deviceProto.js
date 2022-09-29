@@ -145,7 +145,7 @@ export default {
                     }else if (topic.endsWith('/ack')) {
                         const ackMsg = ack.decode(message)
                         const ackValue = Properties.decode(ackMsg.value.value)
-                        this.device.properties.reported[propName] = {ac: ackMsg.status, ad : ackMsg.description, av: 0, value : ackValue[propName] }
+                            this.device.properties.reported[propName] = {ac: ackMsg.status, ad : ackMsg.description, av: 0, value : ackValue[propName] }
                         //gbid('interval_ack').innerText = ackMsg.status + ackMsg.description 
                     } else {
                         const prop = Properties.decode(message)
